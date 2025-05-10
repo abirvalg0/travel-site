@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финальное решение с учетом DOM-структуры</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .widget-container {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        /* Стили для CSS-оверлеев */
+        .overlay-container {
+            position: relative;
+        }
+        
+        .fixed-excursion-title {
+            position: absolute;
+            top: 153px; /* Подстройте под высоту первого выпадающего списка */
+            left: 290px;
+            width: 670px;
+            height: 60px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            font-size: 16px;
+            z-index: 10;
+            pointer-events: none; /* Не блокируем клики */
+        }
+        
+        .fixed-address-title {
+            position: absolute;
+            top: 237px; /* Подстройте под высоту второго выпадающего списка */
+            left: 290px;
+            width: 670px;
+            height: 60px;
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            padding-left: 15px;
+            font-size: 16px;
+            z-index: 10;
+            pointer-events: none; /* Не блокируем клики */
+        }
+        
+        /* Блокировщики для выпадающих списков */
+        .dropdown-blocker {
+            position: absolute;
+            z-index: 50;
+            background-color: transparent;
+            cursor: default !important;
+        }
+        
+        #dropdown1-blocker {
+            top: 153px;
+            left: 290px;
+            width: 700px;
+            height: 60px;
+        }
+        
+        #dropdown2-blocker {
+            top: 237px;
+            left: 290px;
+            width: 700px;
+            height: 60px;
+        }
+        
+        /* Стиль для описания экскурсии */
+        .excursion-description {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-left: 3px solid #3498db;
+            border-radius: 4px;
+            line-height: 1.6;
+            position: relative;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ночная прогулка на теплоходе</h1>
+        <p>Разводные мосты Санкт-Петербурга с воды</p>
+    </header>
+    
+    <main>
+        <div class="overlay-container">
+            <div class="widget-container">
+                <!-- Загрузка скрипта -->
+                <script src="https://lk.excurr.ru/js/showcase3.js"></script>
+                
+                <!-- Настройки -->
+                <script id="ap-showcase-config" type="application/json">
+                    {"partner":862, "excursions":[4]}
+                </script>
+                
+                <!-- Вставить в то место, где нужно разместить приложение -->
+                <div id="ap-showcase3"></div>
+                
+                <!-- Наше описание экскурсии, которое будет вставлено в нужное место -->
+                <div id="excursion-description" class="excursion-description" style="display: none;">
+                    <h3>О нашей экскурсии</h3>
+                    <p>Приглашаем вас на незабываемую ночную прогулку на теплоходе по рекам и каналам Санкт-Петербурга с просмотром разводных мостов. Это уникальная возможность увидеть город с воды в его ночном великолепии.</p>
+                    <p>В программе экскурсии:</p>
+                    <ul>
+                        <li>Проход по главным водным артериям города</li>
+                        <li>Наблюдение за разводом Дворцового и Троицкого мостов</li>
+                        <li>Профессиональный экскурсовод и увлекательный рассказ об истории Петербурга</li>
+                        <li>Комфортабельный теплоход с панорамными окнами и открытой палубой</li>
+                    </ul>
+                    <p>Продолжительность: 90 минут. Сбор группы за 15 минут до отправления у причала.</p>
+                </div>
+            </div>
+            
+            <!-- CSS-оверлеи поверх выпадающих списков -->
+            <div class="fixed-excursion-title">Ночная прогулка на теплоходе. Развод мостов</div>
+            <div class="fixed-address-title">Адмиралтейская набережная, дом 16 (Петровский спуск)</div>
+            
+            <!-- Блокеры для выпадающих списков -->
+            <div id="dropdown1-blocker" class="dropdown-blocker"></div>
+            <div id="dropdown2-blocker" class="dropdown-blocker"></div>
+        </div>
+    </main>
+    
+    <script>
+        // Функция для принудительного блокирования выпадающих списков
+        function forceDisableDropdowns() {
+            // Добавляем CSS правила напрямую в head документа
+            const styleSheet = document.createElement("style");
+            styleSheet.type = "text/css";
+            styleSheet.textContent = `
+                /* Полное блокирование выпадающих списков */
+                #ap-showcase3 [data-dropdown-arrow],
+                #ap-showcase3 .dropdown-arrow,
+                #ap-showcase3 [class*="arrow-down"],
+                #ap-showcase3 [class*="caret"] {
+                    display: none !important;
+                }
+                
+                #ap-showcase3 [class*="dropdown"],
+                #ap-showcase3 .dropdown-element,
+                #ap-showcase3 [data-dropdown] {
+                    cursor: default !important;
+                    pointer-events: none !important;
+                    user-select: none !important;
+                    -webkit-user-select: none !important;
+                }
+                
+                /* Убираем эффекты при наведении */
+                #ap-showcase3 [class*="dropdown"]:hover,
+                #ap-showcase3 .dropdown-element:hover {
+                    background-color: inherit !important;
+                    cursor: default !important;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+        }
+        
+        // Функция для вставки описания экскурсии перед заголовком "Укажите ваши контактные данные"
+        function insertDescriptionBeforeContactForm() {
+            // Теперь у нас есть точный селектор на основе скриншота
+            const contactTitleSelector = '.ap-showcase__contacts-title';
+            
+            // Поиск элемента с заголовком "Укажите ваши контактные данные"
+            const contactTitle = document.querySelector(contactTitleSelector);
+            
+            if (contactTitle) {
+                console.log('Найден заголовок контактной формы:', contactTitle);
+                
+                // Получаем наше описание
+                const descriptionElement = document.getElementById('excursion-description');
+                descriptionElement.style.display = 'block';
+                
+                // Находим родительский элемент для вставки
+                // На основе скриншота видно, что нам нужен родитель второго уровня
+                // (контейнер ap-showcase__contacts-wrapper)
+                const contactsWrapper = contactTitle.closest('.ap-showcase__contacts-wrapper');
+                
+                if (contactsWrapper) {
+                    // Вставляем перед контейнером формы контактов
+                    contactsWrapper.parentNode.insertBefore(descriptionElement, contactsWrapper);
+                    console.log('Описание успешно вставлено перед контейнером контактной формы');
+                } else {
+                    // Если не нашли контейнер, вставляем непосредственно перед заголовком
+                    contactTitle.parentNode.insertBefore(descriptionElement, contactTitle);
+                    console.log('Описание успешно вставлено перед заголовком контактной формы');
+                }
+                
+                return true; // Успешно вставили
+            }
+            
+            return false; // Не нашли элемент
+        }
+        
+        // Функция для расширенного поиска по селекторам на основе скриншота
+        function findByAllPossibleSelectors() {
+            // Массив возможных селекторов на основе DOM-структуры из скриншота
+            const selectors = [
+                '.ap-showcase__contacts-title',
+                '.ap-showcase__contacts-wrapper',
+                '.ap-showcase__results',
+                '[data-v-a7b351a0].ap-showcase__contacts-title',
+                '[data-v-a7b351a0]',
+                '.loading-progress__container'
+            ];
+            
+            // Перебираем селекторы и пытаемся найти элемент
+            for (const selector of selectors) {
+                const elements = document.querySelectorAll(selector);
+                
+                if (elements.length > 0) {
+                    console.log(`Найден элемент по селектору ${selector}:`, elements[0]);
+                    
+                    // Проверяем, содержит ли этот элемент нужный текст
+                    for (const element of elements) {
+                        if (element.textContent.includes('Укажите ваши контактные данные') || 
+                            element.classList.contains('ap-showcase__contacts-title')) {
+                            
+                            // Получаем наше описание
+                            const descriptionElement = document.getElementById('excursion-description');
+                            descriptionElement.style.display = 'block';
+                            
+                            // Определяем подходящий родительский контейнер для вставки
+                            const containerElement = element.closest('.ap-showcase__contacts-wrapper') || 
+                                                    element.closest('[data-v-a7b351a0]') || 
+                                                    element.parentNode;
+                            
+                            if (containerElement && containerElement.parentNode) {
+                                // Вставляем описание перед найденным контейнером
+                                containerElement.parentNode.insertBefore(descriptionElement, containerElement);
+                                console.log('Описание успешно вставлено перед найденным элементом');
+                                return true;
+                            } else {
+                                // Если не нашли подходящий контейнер, вставляем перед самим элементом
+                                element.parentNode.insertBefore(descriptionElement, element);
+                                console.log('Описание успешно вставлено перед самим элементом');
+                                return true;
+                            }
+                        }
+                    }
+                    
+                    // Если нашли элемент, но он не содержит нужный текст,
+                    // возможно это родственный элемент - попробуем вставить после него
+                    if (selector === '.ap-showcase__results' || 
+                        selector === '.loading-progress__container') {
+                        
+                        const element = elements[0];
+                        const descriptionElement = document.getElementById('excursion-description');
+                        descriptionElement.style.display = 'block';
+                        
+                        if (element.nextElementSibling) {
+                            element.parentNode.insertBefore(descriptionElement, element.nextElementSibling);
+                        } else {
+                            element.parentNode.appendChild(descriptionElement);
+                        }
+                        
+                        console.log(`Описание вставлено после элемента с селектором ${selector}`);
+                        return true;
+                    }
+                }
+            }
+            
+            return false; // Не нашли ни один элемент
+        }
+        
+        // Функция наблюдения за изменениями в DOM с использованием атрибутов из скриншота
+        function setupDOMObserver() {
+            const observer = new MutationObserver((mutations) => {
+                for (const mutation of mutations) {
+                    if (mutation.type === 'childList') {
+                        // Проверяем наличие элементов с характерными классами из скриншота
+                        const contactsWrapper = document.querySelector('.ap-showcase__contacts-wrapper');
+                        const contactsTitle = document.querySelector('.ap-showcase__contacts-title');
+                        
+                        if (contactsWrapper || contactsTitle) {
+                            observer.disconnect(); // Отключаем наблюдатель
+                            
+                            console.log('Observer обнаружил нужные элементы');
+                            
+                            // Пробуем вставить описание
+                            const inserted = insertDescriptionBeforeContactForm();
+                            
+                            if (!inserted) {
+                                // Если не удалось вставить описание стандартным методом,
+                                // пробуем расширенный поиск
+                                findByAllPossibleSelectors();
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Начинаем наблюдение за контейнером виджета
+            const widgetContainer = document.getElementById('ap-showcase3');
+            if (widgetContainer) {
+                observer.observe(widgetContainer, {
+                    childList: true,
+                    subtree: true
+                });
+                
+                console.log('MutationObserver запущен для отслеживания загрузки формы контактов');
+            }
+            
+            // Устанавливаем таймаут для прекращения наблюдения
+            setTimeout(() => {
+                observer.disconnect();
+            }, 15000); // Максимум 15 секунд ожидания
+        }
+        
+        // Функция для вставки описания с использованием точных данных из скриншота
+        function insertDescriptionByExactPath() {
+            // Полный путь к элементу контактной формы на основе скриншота
+            const path = {
+                level1: '#ap-showcase3',
+                level2: '.loading-progress__container[data-v-d2f4fcfa]',
+                level3: '.ap-showcase__results[data-v-a7b351a0]',
+                level4: '.ap-showcase__contacts-wrapper[data-v-a7b351a0]',
+                level5: '.ap-showcase__contacts-title[data-v-a7b351a0]'
+            };
+            
+            // Поиск по пути постепенно, начиная с верхнего уровня
+            let currentElement = document.querySelector(path.level1);
+            
+            if (currentElement) {
+                // Найден корневой элемент, ищем следующий уровень
+                const level2 = currentElement.querySelector(path.level2);
+                if (level2) {
+                    // Найден контейнер прогресса загрузки
+                    const level3 = level2.querySelector(path.level3) || level2.nextElementSibling;
+                    if (level3) {
+                        // Найдены результаты
+                        const level4 = level3.querySelector(path.level4);
+                        if (level4) {
+                            // Найден контейнер контактной формы
+                            console.log('Найден контейнер контактной формы по точному пути');
+                            
+                            // Получаем описание
+                            const descriptionElement = document.getElementById('excursion-description');
+                            descriptionElement.style.display = 'block';
+                            
+                            // Вставляем перед контейнером контактной формы
+                            level3.insertBefore(descriptionElement, level4);
+                            console.log('Описание успешно вставлено перед контейнером контактной формы');
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            return false; // Не удалось найти по точному пути
+        }
+        
+        // Функция для запуска всех методов поиска и вставки
+        function runAllInjectionMethods() {
+            console.log('Запускаем все методы вставки описания');
+            
+            // Метод 1: Прямой поиск по точному селектору
+            const inserted1 = insertDescriptionBeforeContactForm();
+            
+            if (!inserted1) {
+                // Метод 2: Поиск по всем возможным селекторам
+                const inserted2 = findByAllPossibleSelectors();
+                
+                if (!inserted2) {
+                    // Метод 3: Поиск по точному пути из скриншота
+                    insertDescriptionByExactPath();
+                }
+            }
+            
+            // Метод 4: Установка MutationObserver
+            setupDOMObserver();
+        }
+        
+        // Запуск всех методов с небольшой задержкой после загрузки страницы
+        window.addEventListener('load', function() {
+            console.log('Страница полностью загружена');
+            
+            // Блокируем выпадающие списки
+            forceDisableDropdowns();
+            
+            // Запускаем методы с постепенно увеличивающейся задержкой
+            setTimeout(() => {
+                runAllInjectionMethods();
+            }, 1000);
+            
+            // Дополнительные попытки с увеличивающимися интервалами
+            setTimeout(() => {
+                insertDescriptionBeforeContactForm() || findByAllPossibleSelectors();
+            }, 3000);
+            
+            setTimeout(() => {
+                insertDescriptionBeforeContactForm() || findByAllPossibleSelectors();
+            }, 5000);
+            
+            setTimeout(() => {
+                const descriptionElement = document.getElementById('excursion-description');
+                if (descriptionElement.style.display === 'none') {
+                    // Если описание так и не было вставлено, используем запасной вариант
+                    console.log('Запасной вариант: вставка описания в корень виджета');
+                    descriptionElement.style.display = 'block';
+                    
+                    const widgetContainer = document.getElementById('ap-showcase3');
+                    
+                    // Пытаемся найти секцию результатов
+                    const resultsSection = widgetContainer.querySelector('.ap-showcase__results');
+                    if (resultsSection) {
+                        // Вставляем в начало секции результатов
+                        resultsSection.insertBefore(descriptionElement, resultsSection.firstChild);
+                    } else {
+                        // Вставляем в конец виджета
+                        widgetContainer.appendChild(descriptionElement);
+                    }
+                }
+            }, 8000);
+        });
+    </script>
+</body>
+</html>
