@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Теплоходы и все такое</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            padding: 40px;
+        }
+        h1 {
+            margin-bottom: 40px;
+        }
+        .payform-tbank {
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            max-width: 300px;
+        }
+        .payform-tbank-row {
+            margin: 5px 0;
+            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #DFE3F3;
+            background-color: #DFE3F3;
+            font-size: 15px;
+        }
+        .payform-tbank-row:focus {
+            background-color: #FFFFFF;
+            border: 1px solid #616871;
+        }
+        .payform-tbank-btn {
+            background-color: #FBC520;
+            border: 1px solid #FBC520;
+            color: #3C2C0B;
+            cursor: pointer;
+        }
+        .payform-tbank-btn:hover {
+            background-color: #FAB619;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Теплоходы и все такое</h1>
+
+    <script src="https://securepay.tinkoff.ru/html/payForm/js/tinkoff_v2.js"></script>
+
+    <form class="payform-tbank" name="payform-tbank" onsubmit="pay(this); return false;">
+        <input class="payform-tbank-row" type="hidden" name="terminalkey" value="TBankTest">
+        <input class="payform-tbank-row" type="hidden" name="frame" value="false">
+        <input class="payform-tbank-row" type="hidden" name="language" value="ru">
+        <input class="payform-tbank-row" type="text" placeholder="Сумма заказа (₽)" name="amount" required>
+        <input class="payform-tbank-row" type="hidden" placeholder="Номер заказа" name="order">
+        <input class="payform-tbank-row" type="text" placeholder="Описание заказа" name="description">
+        <input class="payform-tbank-row" type="text" placeholder="ФИО плательщика" name="name">
+        <input class="payform-tbank-row" type="email" placeholder="E-mail" name="email">
+        <input class="payform-tbank-row" type="tel" placeholder="Контактный телефон" name="phone">
+        <input class="payform-tbank-row payform-tbank-btn" type="submit" value="Оплатить">
+    </form>
+
+</body>
+</html>
